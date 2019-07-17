@@ -106,6 +106,11 @@ public class CommonTabActivity extends AppCompatActivity {
             public void onTabReselect(int position) {
 
             }
+
+            @Override
+            public void onTabUnselected(int position) {
+
+            }
         });
         mTabLayout_8.setCurrentTab(2);
         mTabLayout_3.setCurrentTab(1);
@@ -144,6 +149,11 @@ public class CommonTabActivity extends AppCompatActivity {
     private void tl_2() {
         mTabLayout_2.setTabData(mTabEntities);
         mTabLayout_2.setOnTabSelectListener(new OnTabSelectListener() {
+            @Override
+            public void onTabUnselected(int position) {
+
+            }
+
             @Override
             public void onTabSelect(int position) {
                 mViewPager.setCurrentItem(position);

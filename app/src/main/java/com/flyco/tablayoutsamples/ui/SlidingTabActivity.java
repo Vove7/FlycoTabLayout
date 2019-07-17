@@ -8,6 +8,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -66,6 +67,7 @@ public class SlidingTabActivity extends AppCompatActivity implements OnTabSelect
 
         tabLayout_1.setViewPager(vp);
         tabLayout_2.setViewPager(vp);
+        tabLayout_1.setOnTabSelectListener(this);
         tabLayout_2.setOnTabSelectListener(this);
         tabLayout_3.setViewPager(vp);
         tabLayout_4.setViewPager(vp);
@@ -115,6 +117,11 @@ public class SlidingTabActivity extends AppCompatActivity implements OnTabSelect
     @Override
     public void onTabReselect(int position) {
         Toast.makeText(mContext, "onTabReselect&position--->" + position, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onTabUnselected(int position) {
+        Log.d("11324 :", "onTabUnselected  ----> " + position);
     }
 
     private class MyPagerAdapter extends FragmentPagerAdapter {
