@@ -46,7 +46,7 @@ public class SlidingTabLayout extends HorizontalScrollView implements ViewPager.
     private ViewPager mViewPager;
     private ArrayList<String> mTitles;
     private LinearLayout mTabsContainer;
-    private int mCurrentTab = -1;
+    private int mCurrentTab = 0;
     private int mLastSelect = -1;
     private float mCurrentPositionOffset;
     private int mTabCount;
