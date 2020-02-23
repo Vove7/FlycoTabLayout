@@ -453,9 +453,7 @@ public class SlidingTabLayout extends HorizontalScrollView implements ViewPager.
             TextView tab_title = tabView.findViewById(R.id.tv_tab_title);
             //tab_title.setTextColor(isSelect ? mTextSelectColor : mTextUnselectColor);
 
-            if (mSelectedTextSize != mUnselectedTextSize) {
-                startTextAnimation(tab_title, isSelect);
-            }
+            startTextAnimation(tab_title, isSelect);
             if (mTextBold == TEXT_BOLD_WHEN_SELECT) {
                 tab_title.getPaint().setFakeBoldText(isSelect);
             }
