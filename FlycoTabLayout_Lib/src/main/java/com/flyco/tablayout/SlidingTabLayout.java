@@ -69,6 +69,7 @@ public class SlidingTabLayout extends HorizontalScrollView implements ViewPager.
     private static final int STYLE_BLOCK = 2;
     private int mIndicatorStyle = STYLE_NORMAL;
 
+    private boolean fixedMode;
     private float mTabPadding;
     private boolean mTabSpaceEqual;
     private float mTabWidth;
@@ -195,6 +196,7 @@ public class SlidingTabLayout extends HorizontalScrollView implements ViewPager.
         mTabSpaceEqual = ta.getBoolean(R.styleable.SlidingTabLayout_tl_tab_space_equal, false);
         mTabWidth = ta.getDimension(R.styleable.SlidingTabLayout_tl_tab_width, dp2px(-1));
         mTabPadding = ta.getDimension(R.styleable.SlidingTabLayout_tl_tab_padding, mTabSpaceEqual || mTabWidth > 0 ? dp2px(0) : dp2px(20));
+        fixedMode = ta.getBoolean(R.styleable.SlidingTabLayout_tl_fixedMode, false);
 
         ta.recycle();
     }
@@ -272,7 +274,26 @@ public class SlidingTabLayout extends HorizontalScrollView implements ViewPager.
             addTab(i, pageTitle.toString(), tabView);
         }
 
+        checkFixedMode();
         updateTabStyles();
+    }
+
+    public void setFixedMode(boolean m) {
+        fixedMode = m;
+        checkFixedMode();
+    }
+
+    public void checkFixedMode() {
+        if (fixedMode) {
+            LinearLayout linear = (LinearLayout) getChildAt(0);
+            for (int i = 0; i < linear.getChildCount(); i++) {
+                View c = linear.getChildAt(i);
+                LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) c.getLayoutParams();
+                lp.weight = 1f;
+                c.setLayoutParams(lp);
+                c.invalidate();
+            }
+        }
     }
 
     public void addNewTab(String title) {

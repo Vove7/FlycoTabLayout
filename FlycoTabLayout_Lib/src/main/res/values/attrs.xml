@@ -82,6 +82,9 @@
 
     <declare-styleable name="SlidingTabLayout">
         <!-- indicator -->
+
+        <attr name="tl_fixedMode" format="boolean"/>
+
         <attr name="tl_indicator_color"/>
         <attr name="tl_indicator_height"/>
         <attr name="tl_indicator_width"/>
