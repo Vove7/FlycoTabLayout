@@ -477,6 +477,7 @@ public class SlidingTabLayout extends HorizontalScrollView implements ViewPager.
             startTextAnimation(tab_title, isSelect);
             if (mTextBold == TEXT_BOLD_WHEN_SELECT) {
                 tab_title.getPaint().setFakeBoldText(isSelect);
+                tab_title.invalidate();
             }
 
         }
