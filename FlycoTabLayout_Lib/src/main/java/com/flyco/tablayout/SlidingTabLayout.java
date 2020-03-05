@@ -1,5 +1,7 @@
 package com.flyco.tablayout;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
 import android.content.Context;
@@ -25,6 +27,7 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -44,7 +47,7 @@ import static java.lang.Math.abs;
 public class SlidingTabLayout extends HorizontalScrollView implements ViewPager.OnPageChangeListener {
     private Context mContext;
     private ViewPager mViewPager;
-    private ArrayList<String> mTitles;
+    private ArrayList<String> mTitles = new ArrayList<>();
     private LinearLayout mTabsContainer;
     private int mCurrentTab = 0;
     private int mLastSelect = 0;
@@ -261,16 +264,24 @@ public class SlidingTabLayout extends HorizontalScrollView implements ViewPager.
         notifyDataSetChanged();
     }
 
+    private CharSequence getTitle(int index) {
+        return mViewPager == null ? mTitles.get(index) : mViewPager.getAdapter().getPageTitle(index);
+    }
+
+    private int tabCount() {
+        return mViewPager == null ? mTitles.size() : mViewPager.getAdapter().getCount();
+    }
+
     /**
      * 更新数据
      */
     public void notifyDataSetChanged() {
         mTabsContainer.removeAllViews();
-        this.mTabCount = mTitles == null ? mViewPager.getAdapter().getCount() : mTitles.size();
+        this.mTabCount = tabCount();
         View tabView;
         for (int i = 0; i < mTabCount; i++) {
             tabView = View.inflate(mContext, R.layout.layout_tab, null);
-            CharSequence pageTitle = mTitles == null ? mViewPager.getAdapter().getPageTitle(i) : mTitles.get(i);
+            CharSequence pageTitle = getTitle(i);
             addTab(i, pageTitle.toString(), tabView);
         }
 
@@ -298,15 +309,13 @@ public class SlidingTabLayout extends HorizontalScrollView implements ViewPager.
 
     public void addNewTab(String title) {
         View tabView = View.inflate(mContext, R.layout.layout_tab, null);
-        if (mTitles != null) {
-            mTitles.add(title);
-        }
+        mTitles.add(title);
 
-        CharSequence pageTitle = mTitles == null ? mViewPager.getAdapter().getPageTitle(mTabCount) : mTitles.get(mTabCount);
+        CharSequence pageTitle = getTitle(mTabCount);
         addTab(mTabCount, pageTitle.toString(), tabView);
-        this.mTabCount = mTitles == null ? mViewPager.getAdapter().getCount() : mTitles.size();
+        this.mTabCount = tabCount();
 
-        updateTabStyles();
+        notifyDataSetChanged();
     }
 
     /**
@@ -360,11 +369,19 @@ public class SlidingTabLayout extends HorizontalScrollView implements ViewPager.
             }
         }
         if (index != -1) {
-            if (mViewPager.getCurrentItem() != index) {
+            if (mCurrentTab != index) {
                 if (mSnapOnTabClick) {
-                    mViewPager.setCurrentItem(index, false);
+                    if (mViewPager != null) {
+                        mViewPager.setCurrentItem(index, false);
+                    } else {
+                        startAnimation(index);
+                    }
                 } else {
-                    mViewPager.setCurrentItem(index);
+                    if (mViewPager != null) {
+                        mViewPager.setCurrentItem(index);
+                    } else {
+                        startAnimation(index);
+                    }
                 }
 
                 if (mListener != null) {
@@ -376,6 +393,41 @@ public class SlidingTabLayout extends HorizontalScrollView implements ViewPager.
                 }
             }
         }
+    }
+
+    /**
+     * 模拟 ViewPager 滑动
+     *
+     * @param to
+     */
+    ValueAnimator animator;
+
+    private void startAnimation(int to) {
+        // last to to
+        ValueAnimator l = animator;
+        if (l != null) {
+            l.cancel();
+        }
+        animator = ValueAnimator.ofFloat(mLastSelect, to)
+                .setDuration(200);
+        animator.setInterpolator(new AccelerateDecelerateInterpolator());
+        animator.addUpdateListener(ani -> {
+            float v = (float) ani.getAnimatedValue();
+            mCurrentTab = Math.round(v);
+            mCurrentPositionOffset = v - mCurrentTab;
+            invalidate();
+            updateTabSelection(mCurrentTab);
+            mLastSelect = mCurrentTab;
+            //onPageScrolled(Math.round(v), v - mCurrentTab, 0);
+        });
+        animator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                animator = null;
+                onPageSelected(to);
+            }
+        });
+        animator.start();
     }
 
     private void updateTabStyles() {
@@ -469,7 +521,7 @@ public class SlidingTabLayout extends HorizontalScrollView implements ViewPager.
     }
 
     private void setStyle(boolean isSelect, int index) {
-        if (index > -1) {
+        if (index > -1 && mTabsContainer.getChildCount() > index) {
             View tabView = mTabsContainer.getChildAt(index);
             TextView tab_title = tabView.findViewById(R.id.tv_tab_title);
             //tab_title.setTextColor(isSelect ? mTextSelectColor : mTextUnselectColor);
@@ -488,7 +540,7 @@ public class SlidingTabLayout extends HorizontalScrollView implements ViewPager.
         final float begin = isSelect ? mUnselectedTextSize : mSelectedTextSize;
         float end = isSelect ? mSelectedTextSize : mUnselectedTextSize;
         ValueAnimator a = ValueAnimator.ofFloat(begin, end);
-        a.setDuration(200);
+        a.setDuration(100);
         a.addUpdateListener(animation -> {
             float size = (Float) animation.getAnimatedValue();
             textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
@@ -665,13 +717,20 @@ public class SlidingTabLayout extends HorizontalScrollView implements ViewPager.
     //setter and getter
     public void setCurrentTab(int currentTab) {
         this.mCurrentTab = currentTab;
-        mViewPager.setCurrentItem(currentTab);
-
+        if (mViewPager != null) {
+            mViewPager.setCurrentItem(currentTab);
+        } else {
+            updateTabStyles();
+        }
     }
 
     public void setCurrentTab(int currentTab, boolean smoothScroll) {
         this.mCurrentTab = currentTab;
-        mViewPager.setCurrentItem(currentTab, smoothScroll);
+        if (mViewPager != null) {
+            mViewPager.setCurrentItem(currentTab, smoothScroll);
+        } else {
+            updateTabStyles();
+        }
     }
 
     public void setIndicatorStyle(int indicatorStyle) {
